@@ -1,0 +1,17 @@
+# Allow PHP to see these headers in $_SERVER variable, when PHP is not installed as Apache module
+# http://www.controlstyle.com/articles/programming/text/if-mod-since-php/
+RewriteEngine on
+RewriteRule .* - [E=HTTP_IF_MODIFIED_SINCE:%{HTTP:If-Modified-Since}]
+RewriteRule .* - [E=HTTP_IF_NONE_MATCH:%{HTTP:If-None-Match}]
+
+# Turn on the Expires engine
+#ExpiresActive On
+
+# 
+#ExpiresByType application/x-javascript "modification plus 1 day"
+
+<ifModule mod_headers.c>
+  <filesMatch "(botd|badge.*)\\.(js)$">
+    Header set Cache-Control "max-age=86400, public, must-revalidate, proxy-revalidate"
+  </filesMatch>
+</ifModule> 
