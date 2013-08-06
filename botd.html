@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Badge of the Day Archive</title>
+<script type="text/javascript" src="dom.js"></script>
+<script type="text/javascript" src="badges.js"></script>
+<script type="text/javascript" src="botd.js"></script>
+</head>
+<body>
+<script type="text/javascript">
+//badges indexed by id
+var badgesTable = [];
+for (var i in badges) {
+	var id = badges[i].id;
+	badgesTable[id] = badges[i];
+}
+
+function zPad(number) {
+	if (number < 10) return '0' + number;
+	else return number;
+}
+
+function rkeys(array) {
+	var keys = [];
+	for (var i in array) {
+		keys.push(i);
+	}
+	keys.reverse();
+	return keys;
+}
+
+var ry,rm,rd;
+//for (var y in botd) {
+for (var i in (ry = rkeys(botd))) {
+	var y = ry[i];
+//	for (var m in botd[y]) {
+	for (var j in (rm = rkeys(botd[y]))) {
+		var m = rm[j];
+//		for (var d in botd[y][m]) {
+		for (var k in (rd = rkeys(botd[y][m]))) {
+			var d = rd[k];
+			
+			var id = botd[y][m][d];
+			var badge = badgesTable[id];
+			var s = '<div class="badge">%DATE% <img src="%IMGSRC%" align="left" hspace="5"> <b>%NAME% Badge</b> <i>(%DIFF%)</i><br>'
+				+ '<a href="%GAMEURL%">%GAME%</a> - %DESC%</div>\n';
+			println(s.replace('%DATE%', y + '-' + zPad(m) + '-' + zPad(d))
+				 .replace('%IMGSRC%', badge.icon_url)
+				 .replace('%NAME%', badge.name)
+				 .replace('%DIFF%', badge.difficulty)
+				 .replace('%GAMEURL%', badge.games[0].url)
+				 .replace('%GAME%', badge.games[0].title)
+				 .replace('%DESC%', badge.description)
+				 );
+		}
+	}
+}
+</script>
+</body>
+</html>

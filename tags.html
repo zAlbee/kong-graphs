@@ -1,0 +1,201 @@
+<html>
+<script src="dhtmlx/dhtmlxcommon.js"></script>
+<script src="dhtmlx/dhtmlxcombo.js"></script>
+<script type="text/javascript" src="badges.weekly.js"></script>
+<script type="text/javascript" src="badged_gamesTAGS.js"></script>
+<script type="text/javascript" src="dom.js"></script>
+<link rel="STYLESHEET" type="text/css" href="dhtmlx/dhtmlxcombo.css">
+<style>
+	.tag {
+		background-color: #eee;
+		font-family: sans-serif;
+		font-size: 10pt;
+		padding: 0.25em 0.75em;
+		cursor: pointer; /* hand */
+	}
+
+	.dhx_combo_list {
+		height:50%;
+	}
+</style>
+
+<script>
+  window.dhx_globalImgPath="dhtmlx/imgs/";
+</script>
+
+<!-- <div>Honey pot trap for malware</div> -->
+
+<form name="tagForm" action="javascript:filter()">
+Available tags:
+<div style="display: inline-block">
+<select style='width:200px;' id="combo_zone1" name="combo">
+	<option value="1"></option>
+	<script>
+	for (var tag in allTags) {
+		document.write("<option>" + tag + "</option>");
+	}
+	</script>
+</select>
+</div>
+
+<div>
+Selected tags: 
+<span style="" id="tag_list"> </span>
+</div>
+
+<select name="match">
+	<option value="all">Match all (AND)</option>
+	<option value="any">Match any (OR)</option>
+</select>
+
+<input style="" type="submit" value="Filter">
+</form>
+
+<div id="results">
+</div>
+
+<script>
+	var onchanged = false; //ugly hack
+
+	var z=dhtmlXComboFromSelect("combo_zone1");
+	z.attachEvent("onKeyPressed", onKeyPressedFunc);
+	z.attachEvent("onSelectionChange", onSelectionChangeFunc);
+	z.attachEvent("onChange", onChangeFunc);
+	z.attachEvent("onBlur", onBlurFunc);
+	z.enableFilteringMode(true);
+	function onKeyPressedFunc(key) {
+		if (key == 13) { // <Enter> key
+			// actually not necessary -- onChange does it
+			//var sel = z.getSelectedText();
+			//if (z.getComboText() == '' || sel == '') {
+			//	  filter();
+			//} else {
+				//appendTag(z.getSelectedText());
+				//z.setComboText('');
+			//}
+			return false;
+		}
+		return true;
+	}
+	function onSelectionChangeFunc() {
+		return true;
+	}
+	function onChangeFunc() {
+		var sel = z.getSelectedText();
+		if (sel == '') {
+			// Allows for space + enter to run the filter.
+			// But results in unwanted submit with space + mouse as well
+			filter();
+			return true;
+		}
+		appendTag(sel);
+		// below doesn't work when mouse clicked to select?
+		z.setComboText('');
+		onchanged = true; // ugly hack
+		return true;
+	}
+	function onBlurFunc() {
+		// Clear the textbox after the mouse selected it.
+		// TODO: Only do this after a tag was just added via onChange
+		//if (onchanged) {
+			z.setComboText('');
+			//onchanged = false;
+		//}
+		return true;
+	}
+	// TODO: Change this global name
+	var tags = new Array();
+	function appendTag(tag) {
+		if (tag == "") return;
+		// Not optimal, but OK for small lists
+		if (tags.indexOf(tag) != -1) return;
+
+		tags.push(tag);
+		var el = document.getElementById("tag_list");
+		// TODO: Improve this
+		el.innerHTML += tagHTML(tag);
+	}
+	function removeTag(tag) {
+		if (tag == "") return;
+		var idx = tags.indexOf(tag);
+		if (idx == -1) return;
+
+		tags.splice(idx, 1); // Remove 1 item at idx.
+		redrawTags();
+	}
+	function redrawTags() {
+		var el = document.getElementById("tag_list");
+		el.innerHTML = ""; // clear the list
+		for (var i in tags) {
+			var tag = tags[i];
+			el.innerHTML += tagHTML(tag);
+		}
+	}
+	function tagHTML(tag) {
+		return '<span class="tag" onClick="removeTag(\'' + tag + '\')">' + tag + '</span> ';
+	}
+
+	var useRel= true; // Use relative score? else absolute
+
+	function filter() {
+		var matchSelect = document.forms.tagForm.match;
+		var str = "";
+		// matchALL = AND, else OR
+		var matchAll = (matchSelect[matchSelect.selectedIndex].value == "all");
+		var results = [];
+		var resultStr = '';
+
+		for (var g in games) {
+			var game = games[g];
+			var valid = matchAll ? true : false;
+			var threshold = game.tags['max_score'] * 0.10;
+			//str += game.title + ", ";
+			game.calc_score = null;
+
+			for (var t in tags) {
+				var tag = tags[t];
+				var found = false;
+
+				if (game.tags[tag]) {
+					var score = game.tags[tag].score;
+					var adjScore = score / game.tags['max_score'] * 100;
+					if (score >= threshold) {
+						found = true;
+						if (game.calc_score === null) {
+							game.calc_score = useRel ? adjScore : score;
+						} else if (matchAll) {
+							// AND
+							game.calc_score = Math.min(game.calc_score, useRel ? adjScore : score);
+						} else {
+							// OR
+							game.calc_score = Math.max(game.calc_score, useRel ? adjScore : score);
+						}
+					}
+				}
+
+				if (matchAll && !found) {
+					valid = false;
+					break;
+				} else if (!matchAll && found) {
+					valid = true;
+					//break; // Don't break, find the best score
+				}
+			}
+			if (valid) {
+				results.push(game);
+			}
+		}
+		results.sort(function(a,b) {
+			var k1 = -a.calc_score;
+			var k2 = -b.calc_score;
+			return (k1 > k2) ? 1 : ( (k2 > k1) ? -1 : 0 );
+		});
+		for (var i in results) {
+			var game = results[i];
+			resultStr += '<a href="' + game.url + '" target="_blank">' + game.title + "</a> - " + roundTo(game.calc_score, 2) + "<br>";
+		}
+		document.getElementById("results").innerHTML = resultStr;
+		//alert(str);
+	}
+</script>
+</html>
