@@ -536,7 +536,7 @@ If you want to see which badges you already own in the table, enter your usernam
 	<input type="checkbox" name="hideOwn" id="hideBox" onchange="toggleOwned(this.checked);"><label for="hideBox">Hide Owned Badges</label>
 	</form>
  -->
-	<div id="badgeTable">Sorting data... If you still see this after a few seconds, there may be an error with the script.</div>
+	<div id="badgeTable"><span style="color: #ff0000">Sorting data... If you still see this after a few seconds, there may be an error with the script.</span></div>
 
 <script type="text/javascript">
 // user badges presence indexed by id
@@ -580,9 +580,14 @@ for (var i in badges) {
 		continue;
 	}
 	// "Easy" score = number earned / times played
-	badge.score = badge.users_count / game.plays;
-	// "Easy" x "Good"
-	badge.scoreR = badge.users_count / game.plays * game.rating;
+	if (game.plays <= 0) {
+		badge.score = 0;
+		badge.scoreR = 0;
+	} else {
+		badge.score = badge.users_count / game.plays;
+		// "Easy" x "Good"
+		badge.scoreR = badge.users_count / game.plays * game.rating;
+	}
 	badge.game = game;
 }
 
@@ -601,6 +606,7 @@ if (hideOwn) {
 2012-11-??: Add ability to hide your owned badges from the list.<br>
 2012-11-11: Fix table not showing in IE9. The badges file is now consistent with the plays count file (both updated weekly), so new badges shouldn't get hugely inaccurate percent earned stats anymore. Add sidebar.<br>
 2013-02-01: Open game links in new tab.<br>
+2014-02-16: Kongregate server is having intermittent problems, occasionally throwing 502 and 503 errors. This is affecting my ability to fetch the data for gameplays and ratings. You may see "-1" for these values until the problem is resolved.<br> 
 </p>
 
 <p>

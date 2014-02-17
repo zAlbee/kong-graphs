@@ -8,12 +8,16 @@
 function getAttr($json, $key) {
 	$key = "\"$key\":";
 	$start = strpos($json, $key);
-	if ($start === FALSE) {
+	if ($start === false) {
 		error_log("Failed: $key Not found!");
-		return '';
+		return false;
 	}
 	$start += strlen($key);
 	$end = strpos($json, ',', $start);
+	if ($end === false) {
+		error_log("Failed: Ending comma for $key not found!");
+		return false;
+	}
 	
 	return substr($json, $start, $end - $start);
 }
@@ -22,8 +26,15 @@ function fetchGameInfo($title, $url) {
 	$url2 = "$url/metrics.json";
 	$json = file_get_contents($url2);
 	
-	$plays = getAttr($json, 'gameplays_count');
-	$rating = getAttr($json, 'rating');
+	if ($json === false) {
+		$plays = -1;
+		$rating = -1;
+	} else {
+		$plays = getAttr($json, 'gameplays_count');
+		if ($plays === false) $plays = -2;
+		$rating = getAttr($json, 'rating');
+		if ($rating === false) $rating = -2;
+	}
 
 	//echo "For game $url, has $plays plays, $rating rating.\n";
 	
