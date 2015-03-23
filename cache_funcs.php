@@ -108,7 +108,7 @@ function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
 	}
 	curl_exec($ch);
 
-	if ($debug) echo "Request string was: <pre>". curl_getinfo($ch, CURLINFO_HEADER_OUT) . "</pre>\n";
+	if ($debug) echo "Sending request string: <pre>". curl_getinfo($ch, CURLINFO_HEADER_OUT) . "</pre>\n";
 	if ($debug) echo "Remote time was: ". curl_getinfo($ch, CURLINFO_FILETIME) . "<br>\n";
 
 	$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -157,6 +157,7 @@ function cachedGet($url, $localfile, $prepend='', $debug=FALSE) {
 		$tag = getCacheTag($headerfile, true);
 		list($tagname, $tagvalue) = explode(': ', $tag, 2);
 		$isEtag = strcasecmp($tagname, 'Etag') == 0;
+		if ($debug) echo "isEtag $isEtag<br>\n";
 	} else {
 		// Error case. Could not get from server and not found in cache either.
 		if ($debug) echo "Fail, $localfile not exists";
@@ -169,24 +170,24 @@ function cachedGet($url, $localfile, $prepend='', $debug=FALSE) {
 	}
 	// Check user's last-modified time or etag
 	$headers = emu_getallheaders();
-	foreach ($headers as $header => $value) {
+	foreach ($headers as $key => $value) {
 		if ($debug) {
-			echo "$header: $value\n";
+			echo "$key: $value\n";
 		}
 		// Case-insensitive compare
-		if ((!$isEtag && strcasecmp($header, 'If-Modified-Since') == 0) ||
-				($isEtag && strcasecmp($header, 'If-None-Match') == 0)) {
-			if ($debug) {
-				echo "  found ^^ \n";
-			}
-			if (!empty($value) && $value == $tagvalue) {
-				if ($debug) echo "$value == $tagvalue; would return 304 not modified in real scenario";
+		if ((!$isEtag && strcasecmp($key, 'If-Modified-Since') == 0) ||
+				($isEtag && strcasecmp($key, 'If-None-Match') == 0)) {
+			if (!empty($value) && ($value == $tagvalue || $value == substr($tagvalue,0,-1).'-gzip"')) {
+				if ($debug) echo " [$value] == [$tagvalue]; would return 304 not modified in real scenario";
 				else header("HTTP/1.1 304 Not Modified");
 				// No need to send content when not modified
 				//header($tag);
 				return true;
 			} else {
-				if ($debug) echo "$value != $tagvalue; would return 200 OK in real scenario";
+				if ($debug) {
+					echo " [$value] != [$tagvalue]; would return 200 OK in real scenario";
+					echo " with header [$tag]\n";
+				}
 				else {
 					header("HTTP/1.1 200 OK");
 					// Send the updated modification time/Etag
