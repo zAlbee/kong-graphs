@@ -88,6 +88,14 @@ function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
 	// Cannot use our local file system time even if it is later.
 	// At least for Kongregate (Server: nginx/0.7.67), it will return 200 OK without any content, instead of 304 Not Modified
 	if (file_exists($localfile)) {
+		$diff = time() - filemtime($headerfile);
+		if ($diff < 60 * 30 && !$_GET['force']) {
+			if ($debug) echo "Not fetching, checked $diff secs ago. <br>\n";
+			return 0;
+		}
+		else {
+			if ($debug) echo "Last checked $diff secs ago. Fetching... <br>\n";
+		}
 		$tag = getCacheTag($headerfile, false);
 	}
 
@@ -108,8 +116,18 @@ function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
 	}
 	curl_exec($ch);
 
-	if ($debug) echo "Sending request string: <pre>". curl_getinfo($ch, CURLINFO_HEADER_OUT) . "</pre>\n";
-	if ($debug) echo "Remote time was: ". curl_getinfo($ch, CURLINFO_FILETIME) . "<br>\n";
+	if ($debug) {
+		echo "Sending request string: <pre>". curl_getinfo($ch, CURLINFO_HEADER_OUT) . "</pre>\n";
+		echo "Remote file time: ". curl_getinfo($ch, CURLINFO_FILETIME) . "<br>\n";
+		echo "Name lookup time: ". curl_getinfo($ch, CURLINFO_NAMELOOKUP_TIME) ."<br>\n";
+		echo "Connect time: ". curl_getinfo($ch, CURLINFO_CONNECT_TIME) ."<br>\n";
+		echo "Pre-transfer time: ". curl_getinfo($ch, CURLINFO_PRETRANSFER_TIME) ."<br>\n";
+		echo "Start transfer time: ". curl_getinfo($ch, CURLINFO_STARTTRANSFER_TIME) ."<br>\n";
+		echo "Total time: ". curl_getinfo($ch, CURLINFO_TOTAL_TIME) . "<br>\n";
+		echo "Upload speed: ". curl_getinfo($ch, CURLINFO_SPEED_UPLOAD) ."<br>\n";
+		echo "Download speed: ". curl_getinfo($ch, CURLINFO_SPEED_DOWNLOAD) ."<br>\n";
+		echo "<br>\n";
+	}
 
 	$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 	curl_close($ch);
