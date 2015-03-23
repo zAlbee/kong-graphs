@@ -3,6 +3,7 @@
 require('cache_funcs.php');
 
 $user = $_GET['u'];
+$cbFunc = $_GET['callback'];
 //$len = strlen($user);
 // Remove characters that could be used to access arbitrary URLs
 // For some reason, anything with % including %20 or a space will cause either 400 Bad Request
@@ -14,9 +15,16 @@ $count = 0;
 // Remove invalid chars, limit 1. If any invalid found, reject.
 $user = strtolower(preg_replace('/[^A-Za-z0-9_]/', '', $user, 1, $count));
 
+if ($cbFunc) {
+	$prefix = "$cbFunc(";
+	$suffix = ")";
+} else {
+	$prefix = "";
+	$suffix = "";
+}
 // Reject any string that contained disallowed characters
 if ($count > 0 || !$user) {
-	echo "userBadges = null;";
+	echo $prefix.'null'.$suffix;
 }
 else {
 	/* Uncached version
@@ -25,8 +33,8 @@ else {
 	readfile($url);
 	*/
 	$localfile = "cache/$user.js";
-	if (!cachedGet('http://www.kongregate.com/accounts/' . $user . '/badges.json', 
-		$localfile, 'userBadges = ', FALSE)) {
+	if (!cachedGet("http://www.kongregate.com/accounts/$user/badges.json", 
+		$localfile, $prefix, $suffix, $debug)) {
 //		echo "userBadges = null;";
 	}
 }

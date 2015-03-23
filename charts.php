@@ -104,7 +104,7 @@ cbUser = function (list) {
 };
 </script>
 <?php if ($user) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript">
@@ -114,7 +114,7 @@ cbUser = function (list) {
 };
 </script>
 <?php if ($user2) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user2)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user2)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript" src="badges.js"></script>
@@ -589,6 +589,7 @@ showUser1();
 <b>History:</b><br>
 2012-08-26: Created new page for bar charts<br>
 2012-11-22: Scaled the y-axes equally in Side-by-Side view for daily and monthly charts for better comparison.<br>
+2015-03-22: Fixed issues with Chrome and IE not working with username. Added caching layer for user badges.<br>
 </p>
 
 <p>

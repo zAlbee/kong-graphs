@@ -104,7 +104,7 @@ if (isset($_GET['hideOwn'])) {
 }
 ?>
 <?php if ($user) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript">
@@ -114,7 +114,7 @@ cbUser = function (list) {
 };
 </script>
 <?php if ($user2) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user2)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user2)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript" src="badges.weekly.js"></script>
@@ -607,6 +607,7 @@ if (hideOwn) {
 2012-11-11: Fix table not showing in IE9. The badges file is now consistent with the plays count file (both updated weekly), so new badges shouldn't get hugely inaccurate percent earned stats anymore. Add sidebar.<br>
 2013-02-01: Open game links in new tab.<br>
 2014-02-16: Kongregate server is having intermittent problems, occasionally throwing 502 and 503 errors. This is affecting my ability to fetch the data for gameplays and ratings. You may see "-1" for these values until the problem is resolved.<br> 
+2015-03-22: Fixed issues with Chrome and IE not working with username. Added caching layer for user badges.<br>
 </p>
 
 <p>

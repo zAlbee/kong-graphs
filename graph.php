@@ -112,7 +112,7 @@ cbUser = function (list) {
 };
 </script>
 <?php if ($user) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript">
@@ -122,7 +122,7 @@ cbUser = function (list) {
 };
 </script>
 <?php if ($user2) {
-	echo '<script type="text/javascript" src="http://www.kongregate.com/accounts/' . strToHTML(strtolower($user2)) . '/badges.json?callback=cbUser"></script>' . "\n";
+	echo '<script type="text/javascript" src="cacheduser.php?u=' . strToHTML(strtolower($user2)) . '&callback=cbUser"></script>' . "\n";
 }
 ?>
 <script type="text/javascript" src="badges.js"></script>
@@ -793,6 +793,7 @@ if (valid) {
 2012-08-14: New comparison feature! Compare any two users, by badges or by points. Remove caching layer (requests go straight to Kongregate and are cached locally by your browser).<br>
 2012-08-26: Added difficulty breakdown to basic graphs tab.<br>
 2012-11-22: Added closest stat in Compare tab. Clearer error message when badge data out of date. Added tab for second user if present.<br>
+2015-03-22: Fixed issues with Chrome and IE not working with username. Re-added caching layer for user badges.<br>
 </p>
 
 <p>

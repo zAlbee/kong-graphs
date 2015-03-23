@@ -70,17 +70,14 @@ function getCacheTag($headerfile, $isResponse) {
  *
  * @param $url		URL to fetch
  * @param $localfile	file name to use as the cache file (will be saved here)
- * @param $prepend	if set, will write this string to $localfile before the rest of the file
  * @param $debug	if set, will still update the cache, but also print extra debugs to the user agent
  */
-function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
+function updateCache($url, $localfile, $debug=FALSE) {
 	if ($debug) {
 		echo "$localfile last modified on cache: ";
 		ftime($localfile);
 	}
 
-	// fopen($fp, 'w') truncates the file to 0 length, so need to use temp file
-	$tmpfile = 'temp/tmp' . time();
 	$headerfile = $localfile . '.hdr';
 
 	// If the file is in cache, check the saved headers.
@@ -100,10 +97,10 @@ function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
 	}
 
 	$ch = curl_init($url);
+	// fopen($fp, 'w') truncates the file to 0 length, so need to use temp file
+	$tmpfile = 'temp/tmp' . time();
 	$fp = fopen($tmpfile, "w");
 	$fph = fopen($headerfile, "w");
-
-	if ($prepend) fwrite($fp, $prepend);
 
 	curl_setopt($ch, CURLOPT_FILE, $fp);
 	curl_setopt($ch, CURLOPT_HEADER, false); // Put Response Header in output file?
@@ -165,10 +162,10 @@ function updateCache($url, $localfile, $prepend='', $debug=FALSE) {
  * This function is to be called when a HTTP request comes from the user agent,
  * as it will both analyze incoming and output outgoing headers.
  */
-function cachedGet($url, $localfile, $prepend='', $debug=FALSE) {
+function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
 	// TODO: Make the update optional.
 	// Update our cache.
-	$code = updateCache($url, $localfile, $prepend, $debug);
+	$code = updateCache($url, $localfile, $debug);
 	// Get the last-modified, or etag of our copy.
 	if (file_exists($localfile)) {
 		$headerfile = $localfile . '.hdr';
@@ -219,8 +216,11 @@ function cachedGet($url, $localfile, $prepend='', $debug=FALSE) {
 		echo "</pre>\n";
 	}
 	// Send the file
-	if (file_exists($localfile))
+	if (file_exists($localfile)) {
+		echo $prefix;
 		readfile($localfile);
+		echo $suffix;
+	}
 
 	return true;
 }
