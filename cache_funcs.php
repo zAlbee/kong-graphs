@@ -98,9 +98,11 @@ function updateCache($url, $localfile, $debug=FALSE) {
 
 	$ch = curl_init($url);
 	// fopen($fp, 'w') truncates the file to 0 length, so need to use temp file
-	$tmpfile = 'temp/tmp' . mt_rand();
+	$rand = mt_rand();
+	$tmpfile = 'temp/tmp' . $rand;
+	$tmpheaderfile = 'temp/tmp' . $rand . '.hdr';
 	$fp = fopen($tmpfile, "w");
-	$fph = fopen($headerfile, "w");
+	$fph = fopen($tmpheaderfile, "w");
 
 	curl_setopt($ch, CURLOPT_FILE, $fp);
 	curl_setopt($ch, CURLOPT_HEADER, false); // Put Response Header in output file?
@@ -132,18 +134,23 @@ function updateCache($url, $localfile, $debug=FALSE) {
 	fclose($fph);
 
 	if ($code == 200) { //OK
-		if (file_exists($localfile)) {
-			// Delete the old cached file
-			unlink($localfile);
-		}
-		rename($tmpfile, $localfile);
 		if ($debug) echo "Got 200 OK";
+		rename($tmpfile, $localfile);
+		rename($tmpheaderfile, $headerfile);
 	} else if ($code == 304) { //NOT MODIFIED
-		unlink($tmpfile);
 		if ($debug) echo "Got 304 Not Modified";
+		unlink($tmpfile);
+		rename($tmpheaderfile, $headerfile);
 	} else {
-		// Not implemented!
-		if ($debug) echo "Got $code - this response code is not implemented!";
+		if ($code == 400) { //Kong sends 400 Bad Request if user doesn't exist
+			if ($debug) echo "Got $code - user doesn't exist?";
+		} else {
+			if ($debug) echo "Got $code - this response code is not expected!";
+			error_log("Got $code response for $url");
+		}
+		unlink($tmpfile);
+		unlink($tmpheaderfile);
+		return $code;
 	}
 
 	if ($debug) echo "\n<br>Response Headers saved: <pre>" . file_get_contents($headerfile) . "</pre>\n";
