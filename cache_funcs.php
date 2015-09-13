@@ -98,7 +98,7 @@ function updateCache($url, $localfile, $debug=FALSE) {
 
 	$ch = curl_init($url);
 	// fopen($fp, 'w') truncates the file to 0 length, so need to use temp file
-	$tmpfile = 'temp/tmp' . time();
+	$tmpfile = 'temp/tmp' . mt_rand();
 	$fp = fopen($tmpfile, "w");
 	$fph = fopen($headerfile, "w");
 
