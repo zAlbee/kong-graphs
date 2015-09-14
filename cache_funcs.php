@@ -200,28 +200,29 @@ function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
 		if ((!$isEtag && strcasecmp($key, 'If-Modified-Since') == 0) ||
 				($isEtag && strcasecmp($key, 'If-None-Match') == 0)) {
 			if (!empty($value) && ($value == $tagvalue || $value == substr($tagvalue,0,-1).'-gzip"')) {
-				if ($debug) echo " [$value] == [$tagvalue]; would return 304 not modified in real scenario";
+				if ($debug) echo "</pre>\n [$value] == [$tagvalue]; would return 304 not modified in real scenario";
 				else header("HTTP/1.1 304 Not Modified");
 				// No need to send content when not modified
 				//header($tag);
 				return true;
 			} else {
 				if ($debug) {
-					echo " [$value] != [$tagvalue]; would return 200 OK in real scenario";
-					echo " with header [$tag]\n";
-				}
-				else {
-					header("HTTP/1.1 200 OK");
-					// Send the updated modification time/Etag
-					header($tag);
+					echo " [$value] != [$tagvalue]; client had a cached copy, but it was out of date";
 				}
 			}
 			break;
 		}
 	}
+
 	if ($debug) {
-		echo "</pre>\n";
+		echo "</pre>\n would return 200 OK in real scenario";
+		echo " with header [$tag]\n";
+	} else {
+		header("HTTP/1.1 200 OK");
+		// Send the updated modification time/Etag
+		header($tag);
 	}
+
 	// Send the file
 	if (file_exists($localfile)) {
 		echo $prefix;
