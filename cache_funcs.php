@@ -81,10 +81,14 @@ function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 
 	$headerfile = $localfile . '.hdr';
 	$maxAge = 60 * 30; // 30 minutes
+	$noCache = false;
 	if (!empty($cacheControl)) {
 		$parts = explode('=', $cacheControl);
 		if (count($parts) == 2 && $parts[0] == 'max-age') {
 			$maxAge = $parts[1];
+		}
+		else if ($cacheControl == 'no-cache') {
+			$noCache = true;
 		}
 	}
 
@@ -92,7 +96,7 @@ function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 	// To validate cache using last-modified time, must use time given by last response;
 	// Cannot use our local file system time even if it is later.
 	// At least for Kongregate (Server: nginx/0.7.67), it will return 200 OK without any content, instead of 304 Not Modified
-	if (file_exists($localfile)) {
+	if (!$noCache && file_exists($localfile)) {
 		$diff = time() - filemtime($headerfile);
 		if ($diff < $maxAge && !$_GET['force']) {
 			if ($debug) echo "Not fetching, checked $diff secs ago < $maxAge max-age. <br>\n";
@@ -118,7 +122,7 @@ function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 	curl_setopt($ch, CURLINFO_HEADER_OUT, true); // Set true to allow curl_getinfo to give the *Request* header
 	curl_setopt($ch, CURLOPT_USERAGENT, "PHP/5.2");
 
-	if ($tag) {
+	if ($tag) { // Only true if $noCache is false
 		curl_setopt($ch, CURLOPT_HTTPHEADER, array($tag));
 	}
 	curl_exec($ch);
