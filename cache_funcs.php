@@ -72,13 +72,21 @@ function getCacheTag($headerfile, $isResponse) {
  * @param $localfile	file name to use as the cache file (will be saved here)
  * @param $debug	if set, will still update the cache, but also print extra debugs to the user agent
  */
-function updateCache($url, $localfile, $debug=FALSE) {
+function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 	if ($debug) {
+		echo "cacheControl = $cacheControl<br>\n";
 		echo "$localfile last modified on cache: ";
 		ftime($localfile);
 	}
 
 	$headerfile = $localfile . '.hdr';
+	$maxAge = 60 * 30; // 30 minutes
+	if (!empty($cacheControl)) {
+		$parts = explode('=', $cacheControl);
+		if (count($parts) == 2 && $parts[0] == 'max-age') {
+			$maxAge = $parts[1];
+		}
+	}
 
 	// If the file is in cache, check the saved headers.
 	// To validate cache using last-modified time, must use time given by last response;
@@ -86,12 +94,12 @@ function updateCache($url, $localfile, $debug=FALSE) {
 	// At least for Kongregate (Server: nginx/0.7.67), it will return 200 OK without any content, instead of 304 Not Modified
 	if (file_exists($localfile)) {
 		$diff = time() - filemtime($headerfile);
-		if ($diff < 60 * 30 && !$_GET['force']) {
-			if ($debug) echo "Not fetching, checked $diff secs ago. <br>\n";
+		if ($diff < $maxAge && !$_GET['force']) {
+			if ($debug) echo "Not fetching, checked $diff secs ago < $maxAge max-age. <br>\n";
 			return 0;
 		}
 		else {
-			if ($debug) echo "Last checked $diff secs ago. Fetching... <br>\n";
+			if ($debug) echo "Last checked $diff secs ago >= $maxAge max-age. Fetching... <br>\n";
 		}
 		$tag = getCacheTag($headerfile, false);
 	}
@@ -170,9 +178,22 @@ function updateCache($url, $localfile, $debug=FALSE) {
  * as it will both analyze incoming and output outgoing headers.
  */
 function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
+	$userHeaders = array_change_key_case(emu_getallheaders(), CASE_LOWER);
+
+	if ($debug) {
+		echo "Checking incoming user agent headers<br>\n<pre>";
+	}
+	foreach ($userHeaders as $key => $value) {
+		if ($debug) {
+			echo "$key: $value\n";
+		}
+	}
+
+	$cacheControl = $userHeaders['cache-control'];
+
 	// TODO: Make the update optional.
 	// Update our cache.
-	$code = updateCache($url, $localfile, $debug);
+	$code = updateCache($url, $localfile, $cacheControl, $debug);
 	// Get the last-modified, or etag of our copy.
 	if (file_exists($localfile)) {
 		$headerfile = $localfile . '.hdr';
@@ -187,30 +208,25 @@ function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
 		return false;
 	}
 
-	if ($debug) {
-		echo "Checking incoming user agent headers<br>\n<pre>";
-	}
 	// Check user's last-modified time or etag
-	$headers = emu_getallheaders();
-	foreach ($headers as $key => $value) {
-		if ($debug) {
-			echo "$key: $value\n";
-		}
-		// Case-insensitive compare
-		if ((!$isEtag && strcasecmp($key, 'If-Modified-Since') == 0) ||
-				($isEtag && strcasecmp($key, 'If-None-Match') == 0)) {
-			if (!empty($value) && ($value == $tagvalue || $value == substr($tagvalue,0,-1).'-gzip"')) {
-				if ($debug) echo "</pre>\n [$value] == [$tagvalue]; would return 304 not modified in real scenario";
-				else header("HTTP/1.1 304 Not Modified");
-				// No need to send content when not modified
-				//header($tag);
-				return true;
-			} else {
-				if ($debug) {
-					echo " [$value] != [$tagvalue]; client had a cached copy, but it was out of date";
-				}
+
+	if (!$isEtag) {
+		$userValue = $userHeaders['if-modified-since'];
+	}
+	else {
+		$userValue = $userHeaders['if-none-match'];
+	}
+	if (!empty($userValue)) {
+		if ($userValue == $tagvalue || $userValue == substr($tagvalue,0,-1).'-gzip"') {
+			if ($debug) echo "</pre>\n [$userValue] == [$tagvalue]; would return 304 not modified in real scenario";
+			else header("HTTP/1.1 304 Not Modified");
+			// No need to send content when not modified
+			//header($tag);
+			return true;
+		} else {
+			if ($debug) {
+				echo " [$userValue] != [$tagvalue]; client had a cached copy, but it was out of date";
 			}
-			break;
 		}
 	}
 
