@@ -3,8 +3,8 @@
 <head>
 <?php
 	require('includes.php');
-	$user = preg_replace('/[^A-Za-z0-9_]/', '', strFromGPC($_GET['u']));
-	$user2 = preg_replace('/[^A-Za-z0-9_]/', '', strFromGPC($_GET['u2']));
+	$user = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u'] ?? '');
+	$user2 = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u2'] ?? '');
 	$debug = isset($_GET['debug']);
 ?>
 <title><?php
@@ -173,7 +173,10 @@ function makeRecentDays(badges, n, isPoints, debug, div, textDiv, name, pMax) {
 		var x = badges[i];
 		if (x.mobile_badge_id || !x.created_at) continue;
 		var points = 0;
-		if (x.badge_id) points = badgesTable[x.badge_id].points;
+		if (x.badge_id) {
+			let badge = badgesTable[x.badge_id];
+			if (badge) points = badge.points;
+		}
 		else if (x.id) points = x.points;
 		
 		var date = new Date(x.created_at);
@@ -247,7 +250,10 @@ function makeRecentMonths(badges, n, isPoints, debug, div, textDiv, name, pMax) 
 		var x = badges[i];
 		if (x.mobile_badge_id || !x.created_at) continue;
 		var points = 0;
-		if (x.badge_id) points = badgesTable[x.badge_id].points;
+		if (x.badge_id) {
+			let badge = badgesTable[x.badge_id];
+			if (badge) points = badge.points;
+		}
 		else if (x.id) points = x.points;
 		
 		var date = new Date(x.created_at);
@@ -590,6 +596,7 @@ showUser1();
 2012-08-26: Created new page for bar charts<br>
 2012-11-22: Scaled the y-axes equally in Side-by-Side view for daily and monthly charts for better comparison.<br>
 2015-03-22: Fixed issues with Chrome and IE not working with username. Added caching layer for user badges.<br>
+2026-04-03: Fixed charts/stats not showing up if user earned removed badges.<br>
 </p>
 
 <p>
