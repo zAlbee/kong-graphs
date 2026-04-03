@@ -7,10 +7,12 @@
  * Returns the literal version of a string that came via a GET/POST/COOKIE operation
  */
 function strFromGPC($str) {
-	if (get_magic_quotes_gpc()) {
-		return stripslashes($str);
-	}
-	else return $str;
+	// always returns false, deprecated as of PHP 7.4
+	//if (get_magic_quotes_gpc()) {
+	//	return stripslashes($str);
+	//}
+	//else
+	return $str;
 }
 
 /**

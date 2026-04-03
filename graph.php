@@ -2,8 +2,8 @@
 <html>
 <?php
 	require('includes.php');
-	$user = preg_replace('/[^A-Za-z0-9_]/', '', strFromGPC($_GET['u']));
-	$user2 = preg_replace('/[^A-Za-z0-9_]/', '', strFromGPC($_GET['u2']));
+	$user = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u'] ?? '');
+	$user2 = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u2'] ?? '');
 	$debug = isset($_GET['debug']);
 	$numInvalid = 0;
 ?>
