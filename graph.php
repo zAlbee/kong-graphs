@@ -387,7 +387,10 @@ function makeCompareGraph(badges1, badges2, user1, user2, isPoints, graphs) {
 		if (isUser1) {
 			x = badges1[i++];
 			if (isPoints) {
-				u1count += badgesTable[x.badge_id].points;
+				let badge = badgesTable[x.badge_id];
+				if (badge) {
+					u1count += badge.points;
+				}
 			}
 			else {
 				u1count++;
@@ -396,8 +399,12 @@ function makeCompareGraph(badges1, badges2, user1, user2, isPoints, graphs) {
 		if (isUser2) {
 			x = badges2[j++];
 			if (isPoints) {
-				if (!isKong)
-					u2count += badgesTable[x.badge_id].points;
+				if (!isKong) {
+					let badge = badgesTable[x.badge_id];
+					if (badge) {
+						u2count += badge.points;
+					}
+				}
 				else 
 					u2count += x.points;
 			}
@@ -546,7 +553,7 @@ function makeStackedGraph(badges, userName, isPoints, graphs, userNum) {
 		if (userName) {
 			if (!badgesTable[x.badge_id]) {
 				println("Badge id " + x.badge_id + " not found. i = " + i 
-					+ ", dbg: " + x.created_at.substring(0,19) + "," + count + "," + points);
+					+ ", dbg: " + x.created_at.substring(0,19));
 				outdated = true;
 				continue;
 			} else {
@@ -794,6 +801,7 @@ if (valid) {
 2012-08-26: Added difficulty breakdown to basic graphs tab.<br>
 2012-11-22: Added closest stat in Compare tab. Clearer error message when badge data out of date. Added tab for second user if present.<br>
 2015-03-22: Fixed issues with Chrome and IE not working with username. Re-added caching layer for user badges.<br>
+2026-04-03: Fixed points graphs not showing up if user earned removed badges.<br>
 </p>
 
 <p>
