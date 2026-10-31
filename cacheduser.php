@@ -34,7 +34,7 @@ else {
 	*/
 	$localfile = "cache/$user.js";
 	if (!cachedGet("https://www.kongregate.com/accounts/$user/badges.json", 
-		$localfile, $prefix, $suffix, $debug)) {
+		$localfile, $prefix, $suffix, isset($debug))) {
 //		echo "userBadges = null;";
 	}
 }

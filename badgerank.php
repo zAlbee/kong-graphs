@@ -2,8 +2,8 @@
 <html>
 <?php
 	require('includes.php');
-	$user = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u']);
-?>
+	$user = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u'] ?? '');
+	$user2 = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u2'] ?? '');?>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>Difficulty Analysis</title>
@@ -153,8 +153,18 @@ function badgeToHTMLPic(badge) {
 function badgeToHTMLRow(badge, column, desc) {
 	table.column = column;
 	table.reverse = desc;
-	var s = '<tr valign="top" id="row%ID%" style="%STYLE%"><td>%RANK%</td><td>%COUNT%</td><td>%PLAYS%</td><td>%RATING%</td><td>%DIFF%</td>'
-		+ '<td>%PE%</td><td>%PER%</td><td>%PPP%</td><td>%PPPR%</td><td>%USERHAS%</td><td><a href="%GAMEURL%" title="%DESC%" target="_blank">%GAME%</a> - <b>%BADGE%</b></td>'
+	var s = '<tr valign="top" id="row%ID%" style="%STYLE%">'
+		+ '<td>%RANK%</td>'
+		+ '<td>%COUNT%</td>'
+		+ '<td>%PLAYS%</td>'
+		+ '<td>%RATING%</td>'
+		+ '<td>%DIFF%</td>'
+		+ '<td>%PE%</td>'
+		+ '<td>%PER%</td>'
+		+ '<td>%PPP%</td>'
+		+ '<td>%PPPR%</td>'
+		+ '<td>%USERHAS%</td>'
+		+ '<td><a href="%GAMEURL%" title="%DESC%" target="_blank">%GAME%</a> - <b>%BADGE%</b></td>'
 		+ '</tr>';
 	var marker = desc ? 
 			'<sup style="font-family:sans-serif; color:#00cc00; font-weight: bold">v</sup>':
@@ -162,6 +172,21 @@ function badgeToHTMLRow(badge, column, desc) {
 	
 	if (badge) {
 		var game = badge.game;
+		var style = table.hideOwned && userHasBadge[badge.id] ? 'display: none;':'';
+		return '<tr valign="top" id="row' + badge.id + '" style="' + style + '">'
+			+ '<td>' + table.rank++ + '</td>'
+			+ '<td>' + badge.users_count + '</td>'
+			+ '<td>' + game.plays + '</td>'
+			+ '<td>' + game.rating + '</td>'
+			+ '<td>' + badge.difficulty + '</td>'
+			+ '<td>' + roundTo(badge.score * 100, 2) + '%</td>' // PE
+			+ '<td>' + roundTo(badge.scoreR * 100, 2) + '</td>' // PER
+			+ '<td>' + roundTo(badge.score * badge.points, 2) + ' ppp</td>' // PPP
+			+ '<td>' + roundTo(badge.scoreR * badge.points, 2) + '</td>' // PPPR
+			+ '<td>' + (userHasBadge[badge.id] ? 'Y':'') + '</td>'
+			+ '<td><a href="' + game.url + '" title="' + strToHTML(badge.description) + '" target="_blank">' + game.title + '</a> - <b>' + badge.name + ' Badge</b></td>'
+			+ '</tr>';
+		/*
 		return (s.replace(/%RANK%/g, table.rank++)
 			 .replace('%ID%', badge.id)
 			 .replace('%DATE%', '')
@@ -181,6 +206,7 @@ function badgeToHTMLRow(badge, column, desc) {
 			 .replace('%USERHAS%', userHasBadge[badge.id] ? 'Y':'')
 			 .replace('%STYLE%', table.hideOwned && userHasBadge[badge.id] ? 'display: none;':'')
 			 );
+		 */
 	}
 	else {
 		return (s.replace(/%RANK%/g, 'Rank')

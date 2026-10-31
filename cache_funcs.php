@@ -41,7 +41,13 @@ function getCacheTag($headerfile, $isResponse) {
 	while (!feof($fph) && $line = trim(fgets($fph, 1024)))
 	{
 		if ($line == "\r\n") break;
-		list($key, $val) = explode(': ', $line, 2);
+		$split = explode(': ', $line, 2);
+		if (count($split) != 2) {
+		    // Happens for first line 'HTTP/1.1 200 OK'
+		    // Check to avoid warning "Undefined array key 1"
+		    continue;
+		}
+		list($key, $val) = $split;
 		if (strtolower($key) == "last-modified") {
 			if ($isResponse) $tag = $line; // 'Last-Modified'
 			else $tag = 'If-Modified-Since: ' . $val;
@@ -74,7 +80,7 @@ function getCacheTag($headerfile, $isResponse) {
  */
 function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 	if ($debug) {
-		echo "cacheControl = $cacheControl<br>\n";
+		echo "cacheControl = '$cacheControl'<br>\n";
 		echo "$localfile last modified on cache: ";
 		ftime($localfile);
 	}
@@ -98,7 +104,7 @@ function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 	// At least for Kongregate (Server: nginx/0.7.67), it will return 200 OK without any content, instead of 304 Not Modified
 	if (!$noCache && file_exists($localfile)) {
 		$diff = time() - filemtime($headerfile);
-		if ($diff < $maxAge && !$_GET['force']) {
+		if ($diff < $maxAge && !($_GET['force'] ?? false)) {
 			if ($debug) echo "Not fetching, checked $diff secs ago < $maxAge max-age. <br>\n";
 			return 0;
 		}
@@ -106,6 +112,8 @@ function updateCache($url, $localfile, $cacheControl, $debug=FALSE) {
 			if ($debug) echo "Last checked $diff secs ago >= $maxAge max-age. Fetching... <br>\n";
 		}
 		$tag = getCacheTag($headerfile, false);
+	} else {
+	    $tag = null;
 	}
 
 	$ch = curl_init($url);
@@ -193,7 +201,7 @@ function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
 		}
 	}
 
-	$cacheControl = $userHeaders['cache-control'];
+	$cacheControl = $userHeaders['cache-control'] ?? '';
 
 	// TODO: Make the update optional.
 	// Update our cache.
@@ -215,10 +223,10 @@ function cachedGet($url, $localfile, $prefix='', $suffix='', $debug=FALSE) {
 	// Check user's last-modified time or etag
 
 	if (!$isEtag) {
-		$userValue = $userHeaders['if-modified-since'];
+		$userValue = $userHeaders['if-modified-since'] ?? null;
 	}
 	else {
-		$userValue = $userHeaders['if-none-match'];
+		$userValue = $userHeaders['if-none-match'] ?? null;
 	}
 	if (!empty($userValue)) {
 		if ($userValue == $tagvalue || $userValue == substr($tagvalue,0,-1).'-gzip"') {
