@@ -29,11 +29,11 @@ if ($count > 0 || !$user) {
 else {
 	/* Uncached version
 	echo "userBadges = ";
-	$url = 'http://www.kongregate.com/accounts/' . $user . '/badges.json';
+	$url = 'https://www.kongregate.com/accounts/' . $user . '/badges.json';
 	readfile($url);
 	*/
 	$localfile = "cache/$user.js";
-	if (!cachedGet("http://www.kongregate.com/accounts/$user/badges.json", 
+	if (!cachedGet("https://www.kongregate.com/accounts/$user/badges.json", 
 		$localfile, $prefix, $suffix, $debug)) {
 //		echo "userBadges = null;";
 	}
