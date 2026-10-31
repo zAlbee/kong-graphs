@@ -2,7 +2,7 @@
 <html>
 <?php
 	require('includes.php');
-	$user = preg_replace('/[^A-Za-z0-9_]/', '', strFromGPC($_GET['u']));
+	$user = preg_replace('/[^A-Za-z0-9_]/', '', $_GET['u']);
 ?>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
